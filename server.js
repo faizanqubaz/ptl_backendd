@@ -1,31 +1,29 @@
-require('dotenv').config({ path: './.env' });
-
-console.log("Starting server...");
-console.log("MongoDB URI from env:", process.env.MONGODB_URI); // Debugging log
-
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 
 const app = express();
 
-// Check if MONGODB_URI is correctly loaded
-if (!process.env.MONGODB_URI) {
-  console.error("❌ ERROR: MONGODB_URI is not defined. Check your .env file.");
-  process.exit(1); // Stop the app if MongoDB URI is missing
+// Async function to handle database connection
+async function startServer() {
+  try {
+    // Connect to Database
+    await connectDB();
+    console.log("Database connected successfully");
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    process.exit(1);
+  }
 }
-
-// Connect to Database
-connectDB().catch((err) => {
-  console.error("Database connection failed!", err);
-});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
+// Logging middleware
 app.use((req, res, next) => {
-  console.log(${req.method} ${req.url});
+  console.log(`${req.method} ${req.url}`);
   next();
 });
 
@@ -38,7 +36,8 @@ app.get('/test', (req, res) => {
   res.json({ message: "Backend is working!" });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(Server running on port ${PORT});
-});
+// For Vercel serverless functions
+startServer();
+
+// Export the app
+module.exports = app;
