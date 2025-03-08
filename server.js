@@ -5,18 +5,6 @@ const connectDB = require('./config/db');
 
 const app = express();
 
-// Async function to handle database connection
-async function startServer() {
-  try {
-    // Connect to Database
-    await connectDB();
-    console.log("Database connected successfully");
-  } catch (error) {
-    console.error("Database connection failed:", error);
-    process.exit(1);
-  }
-}
-
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -36,8 +24,26 @@ app.get('/test', (req, res) => {
   res.json({ message: "Backend is working!" });
 });
 
-// For Vercel serverless functions
-startServer();
+// Connect to Database and Start Server (for local development)
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
 
-// Export the app
+  const startServer = async () => {
+    try {
+      await connectDB();
+      console.log("Database connected successfully");
+
+      app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+      });
+    } catch (error) {
+      console.error("Database connection failed:", error);
+      process.exit(1);
+    }
+  };
+
+  startServer();
+}
+
+// Export the app for Vercel
 module.exports = app;
